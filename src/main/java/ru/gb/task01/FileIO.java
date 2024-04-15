@@ -4,14 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 public class FileIO {
 
-    public static void serialise(String filename, Object object){
+    public static void serialize(String filename, Object object){
         try{
             if (filename.endsWith(".json")){
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -29,6 +26,30 @@ public class FileIO {
                 throw new FileNameExtensionException("unrecognized file extension");
             }
         } catch (IOException | FileNameExtensionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Student deserialize(String filename){
+        File file = new File(filename);
+
+        try {
+            if (!file.exists()) throw new FileNotFoundException();
+
+            if (filename.endsWith(".json")){
+                ObjectMapper objectMapper = new ObjectMapper();
+                return objectMapper.readValue(file, Student.class);
+            } else if (filename.endsWith(".xml")) {
+                XmlMapper xmlMapper = new XmlMapper();
+                return xmlMapper.readValue(file, Student.class);
+            } else if (filename.endsWith(".bin")) {
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    return (Student) ois.readObject();
+                }
+            } else {
+                throw new FileNameExtensionException("unrecognized file extension");
+            }
+        } catch (IOException | ClassNotFoundException | FileNameExtensionException e) {
             throw new RuntimeException(e);
         }
     }
